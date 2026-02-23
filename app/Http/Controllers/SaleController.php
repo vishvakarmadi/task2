@@ -35,85 +35,78 @@ class SaleController extends Controller
         $product = Product::findOrFail($request->product_id);
 
         if ($request->quantity > $product->stock) {
-            return back()->withErrors(['quantity' => 'Not enough stock! Available: ' . $product->stock])->withInput();
+            return back()->withErrors(['quantity' => 'Not enough stock. Available: ' . $product->stock])->withInput();
         }
 
-        // Calculations
+        // calculate sale amounts
         $saleAmount = $request->quantity * $product->sell_price;
         $discount = $request->discount ?? 0;
         $afterDiscount = $saleAmount - $discount;
-        $vatRate = 5; // 5%
-        $vatAmount = round($afterDiscount * ($vatRate / 100), 2);
-        $total = round($afterDiscount + $vatAmount, 2);
+        $vat = round($afterDiscount * 0.05, 2); // 5% VAT
+        $total = round($afterDiscount + $vat, 2);
         $paid = $request->paid ?? 0;
         $due = round($total - $paid, 2);
 
-        // Create sale
         $sale = Sale::create([
             'product_id' => $product->id,
             'quantity' => $request->quantity,
             'discount' => $discount,
-            'vat' => $vatAmount,
+            'vat' => $vat,
             'total' => $total,
             'paid' => $paid,
             'due' => $due,
             'date' => $request->date,
         ]);
 
-        // Update stock
+        // reduce stock
         $product->decrement('stock', $request->quantity);
 
-        // COGS (Cost of Goods Sold)
         $cogs = $request->quantity * $product->purchase_price;
 
-        // Journal Entry: Sale
-        // Cash A/C Dr (paid amount)
+        // journal entries for the sale
         if ($paid > 0) {
             JournalEntry::create([
                 'account' => 'Cash A/C',
                 'debit' => $paid,
                 'credit' => 0,
                 'date' => $request->date,
-                'description' => "Cash received for sale of {$product->name}",
+                'description' => "Cash received - {$product->name}",
             ]);
         }
 
-        // Accounts Receivable Dr (due amount)
         if ($due > 0) {
             JournalEntry::create([
                 'account' => 'Accounts Receivable A/C',
                 'debit' => $due,
                 'credit' => 0,
                 'date' => $request->date,
-                'description' => "Due from sale of {$product->name}",
+                'description' => "Due from sale - {$product->name}",
             ]);
         }
 
-        // Sales A/C Cr (after discount)
         JournalEntry::create([
             'account' => 'Sales A/C',
             'debit' => 0,
             'credit' => $afterDiscount,
             'date' => $request->date,
-            'description' => "Sale of {$request->quantity} units of {$product->name}",
+            'description' => "Sold {$request->quantity} x {$product->name}",
         ]);
 
-        // VAT Payable Cr
         JournalEntry::create([
             'account' => 'VAT Payable A/C',
             'debit' => 0,
-            'credit' => $vatAmount,
+            'credit' => $vat,
             'date' => $request->date,
-            'description' => "VAT on sale of {$product->name} (5%)",
+            'description' => "VAT on sale - {$product->name}",
         ]);
 
-        // COGS Entry
+        // COGS entries
         JournalEntry::create([
             'account' => 'COGS A/C',
             'debit' => $cogs,
             'credit' => 0,
             'date' => $request->date,
-            'description' => "Cost of {$request->quantity} units of {$product->name}",
+            'description' => "Cost of {$request->quantity} x {$product->name}",
         ]);
 
         JournalEntry::create([
@@ -121,9 +114,9 @@ class SaleController extends Controller
             'debit' => 0,
             'credit' => $cogs,
             'date' => $request->date,
-            'description' => "Inventory reduced for sale of {$product->name}",
+            'description' => "Stock out - {$product->name}",
         ]);
 
-        return redirect()->route('sales.index')->with('success', "Sale recorded! Total: {$total} TK, Paid: {$paid} TK, Due: {$due} TK");
+        return redirect()->route('sales.index')->with('success', "Sale recorded. Total: {$total} TK, Paid: {$paid} TK, Due: {$due} TK");
     }
 }

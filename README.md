@@ -1,77 +1,85 @@
-# Inventory Management System (Task 2)
+# Inventory Management System
 
-## Developer: Aditya Vishvakarma
+A simple inventory system with accounting journal entries and financial reports.
 
----
+## What It Does
 
-## About
+- Add products with purchase price, sell price, and opening stock
+- Record sales with discount, 5% VAT, and partial payment tracking
+- Record purchases to restock inventory
+- Auto-generate journal entries for every transaction
+- Date-wise financial report (total sales, expenses, profit/loss)
 
-An Inventory Management System built with **Laravel 11** featuring:
-- Product management with opening inventory tracking
-- Sales with discount, VAT (5%), and due amount calculations
-- Purchase recording with automatic stock updates
-- Double-entry accounting journal entries
-- Date-wise financial reports with profit/loss analysis
-- Bootstrap 5 responsive UI with sidebar navigation
+## Business Scenario (from assignment)
 
-## Business Scenario
+A product is entered:
+- Purchase Price: 100 TK, Sell Price: 200 TK, Opening Stock: 50 units
 
-| Item | Value |
-|------|-------|
-| Purchase Price | 100 TK |
-| Sell Price | 200 TK |
-| Opening Stock | 50 units |
-| Opening Inventory Value | 5,000 TK |
+Then a sale happens:
+- Sold: 10 units, Discount: 50 TK, VAT: 5%
+- Customer pays: 1000 TK, rest is due
 
-### Sale Calculation Example
-- Sale: 10 units × 200 = 2,000 TK
-- Discount: 50 TK → After Discount: 1,950 TK
-- VAT (5%): 97.50 TK → Total Invoice: 2,047.50 TK
-- Customer Paid: 1,000 TK → Due: 1,047.50 TK
-- COGS: 10 × 100 = 1,000 TK
+### Calculation
+```
+Sale Amount:     10 x 200     = 2,000.00 TK
+Discount:                     -    50.00 TK
+After Discount:               = 1,950.00 TK
+VAT (5%):        1950 x 0.05  =    97.50 TK
+Total Invoice:                = 2,047.50 TK
+Customer Paid:                = 1,000.00 TK
+Due:                          = 1,047.50 TK
+```
 
-## Database Structure
+### Journal Entries Created
+| Account | Debit | Credit |
+|---------|-------|--------|
+| Cash A/C | 1,000.00 | |
+| Accounts Receivable A/C | 1,047.50 | |
+| Sales A/C | | 1,950.00 |
+| VAT Payable A/C | | 97.50 |
+| COGS A/C | 1,000.00 | |
+| Inventory A/C | | 1,000.00 |
 
-- **products**: id, name, purchase_price, sell_price, stock
-- **sales**: id, product_id, quantity, discount, vat, total, paid, due, date
-- **purchases**: id, product_id, quantity, total, date
-- **journal_entries**: id, account, debit, credit, date, description
+## Tech Stack
 
-## Setup Instructions
+- Laravel 11
+- Bootstrap 5
+- MySQL
+
+## Setup
 
 ```bash
-# 1. Clone project
-git clone <repository-url>
-cd task2
-
-# 2. Install dependencies
 composer install
-
-# 3. Configure environment
 cp .env.example .env
 php artisan key:generate
+```
 
-# 4. Set database in .env
-DB_DATABASE=task2
-DB_USERNAME=root
-DB_PASSWORD=
+Update `.env`:
+```
+DB_DATABASE=your_db
+DB_USERNAME=your_user
+DB_PASSWORD=your_pass
+```
 
-# 5. Create database & run migrations
+Run:
+```bash
 php artisan migrate
-
-# 6. Seed demo user
 php artisan db:seed
-
-# 7. Start server
 php artisan serve
 ```
 
-## Demo Credentials
-- **Email:** test@example.com
-- **Password:** 12345678
+Login: `test@example.com` / `12345678`
 
-## Tech Stack
-- Laravel 11 (PHP 8.2+)
-- MySQL
-- Bootstrap 5
-- Font Awesome 6
+## Pages
+
+- **Dashboard** - summary cards (products, stock, sales, purchases, due, profit)
+- **Products** - CRUD with opening stock journal entries
+- **Sales** - create sale with live invoice calculator, auto journal entries
+- **Purchases** - add stock with journal entries
+- **Journal** - view all accounting entries
+- **Reports** - date-wise filter for sales, expenses, profit
+
+## Live Demo
+
+- URL: https://task2.kisusoft.com
+- Credentials: test@example.com / 12345678

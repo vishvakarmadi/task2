@@ -25,26 +25,26 @@ class ProductController extends Controller
 
         $product = Product::create($request->only('name', 'purchase_price', 'sell_price', 'stock'));
 
-        // Create opening inventory journal entry
-        $inventoryValue = $product->purchase_price * $product->stock;
-        if ($inventoryValue > 0) {
+        // opening stock journal entry
+        $value = $product->purchase_price * $product->stock;
+        if ($value > 0) {
             JournalEntry::create([
                 'account' => 'Inventory A/C',
-                'debit' => $inventoryValue,
+                'debit' => $value,
                 'credit' => 0,
                 'date' => now()->toDateString(),
-                'description' => "Opening stock: {$product->name} ({$product->stock} units × {$product->purchase_price} TK)",
+                'description' => "Opening stock - {$product->name} ({$product->stock} units)",
             ]);
             JournalEntry::create([
                 'account' => 'Cash A/C',
                 'debit' => 0,
-                'credit' => $inventoryValue,
+                'credit' => $value,
                 'date' => now()->toDateString(),
-                'description' => "Opening stock purchase: {$product->name}",
+                'description' => "Paid for opening stock - {$product->name}",
             ]);
         }
 
-        return redirect()->route('products.index')->with('success', 'Product created successfully!');
+        return redirect()->route('products.index')->with('success', 'Product added.');
     }
 
     public function update(Request $request, Product $product)
@@ -57,12 +57,12 @@ class ProductController extends Controller
         ]);
 
         $product->update($request->only('name', 'purchase_price', 'sell_price', 'stock'));
-        return redirect()->route('products.index')->with('success', 'Product updated successfully!');
+        return redirect()->route('products.index')->with('success', 'Product updated.');
     }
 
     public function destroy(Product $product)
     {
         $product->delete();
-        return redirect()->route('products.index')->with('success', 'Product deleted!');
+        return redirect()->route('products.index')->with('success', 'Product deleted.');
     }
 }
