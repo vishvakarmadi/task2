@@ -1,7 +1,6 @@
 # Inventory Management System (Task 2)
 
-## Student: Aditya Vishvakarma
-## Submission Date: 25/02/2026
+## Developer: Aditya Vishvakarma
 
 ---
 
